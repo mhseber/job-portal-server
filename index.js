@@ -33,6 +33,7 @@ async function run() {
 
         // jobs related apis
         const jobsCollection = client.db('JobPortal').collection('job');
+        const jobApplicationCollection = client.db('JobPortal').collection('job_applications')
 
         app.get('/job', async (req, res) => {
             const cursor = jobsCollection.find();
@@ -47,6 +48,21 @@ async function run() {
             const result = await jobsCollection.findOne(query);
             res.send(result);
         });
+        //job application apis
+        // get all data, get one data, get some data [o, 1, many]
+        app.get('/job-application', async (req, res) => {
+            const email = req.query.email;
+            const query = { applicant_email: email }
+            const result = await jobApplicationCollection.find(query).toArray();
+            res.send(result);
+        });
+        app.post('/job-applications', async (req, res) => {
+            const application = req.body;
+            const result = await jobApplicationCollection.insertOne(application);
+            res.send(result);
+        });
+
+
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
