@@ -11,7 +11,7 @@ app.use(cors({
     origin: [
         'http://localhost:5173',
         'https://job-portal-5c1b5.web.app',
-        'https://job-portal-5c1b5.firebaseapp.com/'
+        'https://job-portal-5c1b5.firebaseapp.com'
     ],
     credentials: true
 }));
@@ -54,10 +54,10 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        // await client.connect();
+        await client.connect();
         // Send a ping to confirm a successful connection
-        // await client.db("admin").command({ ping: 1 });
-        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         // jobs related apis
         const jobsCollection = client.db('JobPortal').collection('job');
@@ -88,13 +88,26 @@ async function run() {
 
         // jobs related APIs
         app.get('/job', logger, async (req, res) => {
-            console.log('now inside the api callback')
             const email = req.query.email;
+            const sort = req.query?.sort;
+            const search = req.query?.search;
             let query = {};
+            let sortQuery = {};
+
             if (email) {
-                query = { hr_email: email }
+                query = { hr_email: email };
             };
-            const cursor = jobsCollection.find(query);
+
+            if (sort == "true") {
+                sortQuery = { "salaryRange.min": -1 };
+            };
+
+            if (search) {
+                query.location = { $regex: search, $option: "i" }
+            };
+            console.log(query);
+
+            const cursor = jobsCollection.find(query).sort(sortQuery);
             const result = await cursor.toArray();
             res.send(result);
         });
